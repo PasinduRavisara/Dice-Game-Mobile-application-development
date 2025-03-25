@@ -1,6 +1,7 @@
 package com.example.dicegame.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,16 +16,20 @@ import com.example.dicegame.data.GameState
 import com.example.dicegame.data.PlayerState
 import com.example.dicegame.ui.components.DiceRow
 import com.example.dicegame.ui.components.ScoreBoard
+import com.example.dicegame.ui.theme.LocalThemeState
 import kotlin.random.Random
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.dicegame.data.AppState
 
 @Composable
 fun GameScreen(
-    onGameEnd: () -> Unit
+    onGameEnd: () -> Unit,
+    appState: AppState,
+    onAppStateUpdate: (AppState) -> Unit
 ) {
-    var gameState by remember { mutableStateOf(GameState()) }
+    var gameState by remember { mutableStateOf(GameState(humanWins = appState.humanWins, computerWins = appState.computerWins)) }
     var showResultDialog by remember { mutableStateOf(false) }
     var targetScoreInput by remember { mutableStateOf("101") }
     var showTargetScoreDialog by remember { mutableStateOf(true) }
@@ -32,6 +37,7 @@ fun GameScreen(
     var computerRerollCount by remember { mutableStateOf(0) }
     var isShowingFinalResult by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val isDarkTheme = LocalThemeState.current
 
     // Target score dialog
     if (showTargetScoreDialog) {
@@ -68,6 +74,7 @@ fun GameScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(if (isDarkTheme.value) Color(0xFF121212) else Color.White)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -76,7 +83,10 @@ fun GameScreen(
             humanScore = gameState.humanPlayer.totalScore,
             computerScore = gameState.computerPlayer.totalScore,
             currentAttempt = gameState.attemptCount,
-            targetScore = gameState.targetScore
+            targetScore = gameState.targetScore,
+            isDarkTheme = isDarkTheme.value,
+            humanWins = appState.humanWins,
+            computerWins = appState.computerWins
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -87,7 +97,7 @@ fun GameScreen(
                 "Your Dice",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.White
+                color = if (isDarkTheme.value) Color.White else Color.Black
             )
 
             DiceRow(
@@ -109,7 +119,7 @@ fun GameScreen(
             Text(
                 "Current Roll: ${calculateDiceSum(gameState.humanPlayer.dice)} points",
                 modifier = Modifier.padding(top = 4.dp),
-                color = Color.White
+                color = if (isDarkTheme.value) Color.White else Color.Black
             )
         }
 
@@ -121,7 +131,7 @@ fun GameScreen(
                 "Computer's Dice",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.White
+                color = if (isDarkTheme.value) Color.White else Color.Black
             )
 
             if (isComputerRerolling) {
@@ -140,7 +150,7 @@ fun GameScreen(
                         Text(
                             "Computer is rerolling... (${computerRerollCount}/2)",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White
+                            color = if (isDarkTheme.value) Color.White else Color.Black
                         )
                     }
                 }
@@ -151,7 +161,7 @@ fun GameScreen(
             Text(
                 "Current Roll: ${calculateDiceSum(gameState.computerPlayer.dice)} points",
                 modifier = Modifier.padding(top = 4.dp),
-                color = Color.White
+                color = if (isDarkTheme.value) Color.White else Color.Black
             )
         }
 
@@ -276,7 +286,7 @@ fun GameScreen(
                                             rollCount = 0
                                         )
                                     )
-                            checkGameEnd(updatedState, { gameState = it }, { showResultDialog = it })
+                            checkGameEnd(updatedState, { gameState = it }, { showResultDialog = it }, onAppStateUpdate)
                                 }
 
                                 // Wait 3 seconds to show the final result
@@ -401,7 +411,8 @@ private fun handleScoring(
 private fun checkGameEnd(
     currentState: GameState,
     onStateUpdate: (GameState) -> Unit,
-    onShowResultDialog: (Boolean) -> Unit
+    onShowResultDialog: (Boolean) -> Unit,
+    onAppStateUpdate: (AppState) -> Unit
 ) {
     val humanScore = currentState.humanPlayer.totalScore
     val computerScore = currentState.computerPlayer.totalScore
@@ -417,10 +428,18 @@ private fun checkGameEnd(
             ))
         } else {
             // Game ended with a winner
+            val isHumanWinner = humanScore > computerScore
+            val newHumanWins = if (isHumanWinner) currentState.humanWins + 1 else currentState.humanWins
+            val newComputerWins = if (!isHumanWinner) currentState.computerWins + 1 else currentState.computerWins
+            
+            // Update both game state and app state
             onStateUpdate(currentState.copy(
                 gameEnded = true,
-                winner = if (humanScore > computerScore) "human" else "computer"
+                winner = if (isHumanWinner) "human" else "computer",
+                humanWins = newHumanWins,
+                computerWins = newComputerWins
             ))
+            onAppStateUpdate(AppState(humanWins = newHumanWins, computerWins = newComputerWins))
             onShowResultDialog(true)
         }
     }

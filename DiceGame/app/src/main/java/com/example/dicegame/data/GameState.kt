@@ -22,5 +22,7 @@ data class GameState(
     val gameEnded: Boolean = false,
     val winner: String = "",
     val isTieBreaker: Boolean = false,
-    val attemptCount: Int = 0
+    val attemptCount: Int = 0,
+    val humanWins: Int = 0,
+    val computerWins: Int = 0
 )

@@ -15,7 +15,10 @@ fun ScoreBoard(
     humanScore: Int,
     computerScore: Int,
     currentAttempt: Int,
-    targetScore: Int
+    targetScore: Int,
+    isDarkTheme: Boolean,
+    humanWins: Int,
+    computerWins: Int
 ) {
     Row(
         modifier = Modifier
@@ -24,18 +27,20 @@ fun ScoreBoard(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("You", fontWeight = FontWeight.Bold, color = Color.White)
-            Text("$humanScore / $targetScore", fontSize = 18.sp, color = Color.White)
+            Text("You", fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.White else Color.Black)
+            Text("$humanScore / $targetScore", fontSize = 18.sp, color = if (isDarkTheme) Color.White else Color.Black)
+            Text("Wins: $humanWins", fontSize = 14.sp, color = if (isDarkTheme) Color.White else Color.Black)
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Attempt", fontWeight = FontWeight.Bold, color = Color.White)
-            Text("$currentAttempt", fontSize = 18.sp, color = Color.White)
+            Text("Attempt", fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.White else Color.Black)
+            Text("$currentAttempt", fontSize = 18.sp, color = if (isDarkTheme) Color.White else Color.Black)
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Computer", fontWeight = FontWeight.Bold, color = Color.White)
-            Text("$computerScore / $targetScore", fontSize = 18.sp, color = Color.White)
+            Text("Computer", fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.White else Color.Black)
+            Text("$computerScore / $targetScore", fontSize = 18.sp, color = if (isDarkTheme) Color.White else Color.Black)
+            Text("Wins: $computerWins", fontSize = 14.sp, color = if (isDarkTheme) Color.White else Color.Black)
         }
     }
 }
