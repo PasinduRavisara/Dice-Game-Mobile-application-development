@@ -86,7 +86,8 @@ fun GameScreen(
             Text(
                 "Your Dice",
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
 
             DiceRow(
@@ -107,7 +108,8 @@ fun GameScreen(
 
             Text(
                 "Current Roll: ${calculateDiceSum(gameState.humanPlayer.dice)} points",
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp),
+                color = Color.White
             )
         }
 
@@ -118,7 +120,8 @@ fun GameScreen(
             Text(
                 "Computer's Dice",
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
 
             if (isComputerRerolling) {
@@ -136,17 +139,19 @@ fun GameScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "Computer is rerolling... (${computerRerollCount}/2)",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White
                         )
                     }
                 }
             } else {
-            DiceRow(dice = gameState.computerPlayer.dice)
+                DiceRow(dice = gameState.computerPlayer.dice)
             }
 
             Text(
                 "Current Roll: ${calculateDiceSum(gameState.computerPlayer.dice)} points",
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp),
+                color = Color.White
             )
         }
 
@@ -303,18 +308,29 @@ fun GameScreen(
         val isHumanWinner = gameState.winner == "human"
         AlertDialog(
             onDismissRequest = { onGameEnd() },
-            title = { Text(if (isHumanWinner) "You Win!" else "You Lose") },
+            title = { 
+                Text(
+                    if (isHumanWinner) "You Win!" else "You Lose",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
             text = {
                 Text(
                     if (isHumanWinner)
                         "Congratulations! You reached ${gameState.humanPlayer.totalScore} points in ${gameState.attemptCount} attempts."
                     else
                         "The computer reached ${gameState.computerPlayer.totalScore} points in ${gameState.attemptCount} attempts.",
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.White
                 )
             },
             confirmButton = {
-                Button(onClick = onGameEnd) {
+                Button(
+                    onClick = onGameEnd,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Back to Main Menu")
                 }
             },
