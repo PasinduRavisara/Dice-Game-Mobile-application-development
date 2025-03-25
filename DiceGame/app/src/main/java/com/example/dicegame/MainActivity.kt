@@ -13,20 +13,36 @@ import com.example.dicegame.ui.theme.DiceGameTheme
 import com.example.dicegame.data.AppState
 
 class MainActivity : ComponentActivity() {
+    private var savedAppState: AppState? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Restore saved state if available
+        savedInstanceState?.let { bundle ->
+            savedAppState = bundle.getParcelable("appState")
+        }
+
         setContent {
             DiceGameTheme {
-                DiceGameApp()
+                DiceGameApp(savedAppState)
             }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save current app state
+        savedAppState?.let { state ->
+            outState.putParcelable("appState", state)
         }
     }
 }
 
 @Composable
-fun DiceGameApp() {
+fun DiceGameApp(initialAppState: AppState?) {
     val navController = rememberNavController()
-    var appState by remember { mutableStateOf(AppState()) }
+    var appState by remember { mutableStateOf(initialAppState ?: AppState()) }
 
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {

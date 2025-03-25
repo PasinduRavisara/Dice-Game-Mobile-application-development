@@ -39,6 +39,14 @@ fun GameScreen(
     val scope = rememberCoroutineScope()
     val isDarkTheme = LocalThemeState.current
 
+    // Save game state to app state whenever it changes
+    LaunchedEffect(gameState) {
+        onAppStateUpdate(AppState(
+            humanWins = gameState.humanWins,
+            computerWins = gameState.computerWins
+        ))
+    }
+
     // Target score dialog
     if (showTargetScoreDialog) {
         AlertDialog(
