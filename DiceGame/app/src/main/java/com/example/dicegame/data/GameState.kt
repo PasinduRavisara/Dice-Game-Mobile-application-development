@@ -3,7 +3,7 @@ package com.example.dicegame.data
 import kotlin.random.Random
 
 data class Die(
-    val value: Int = Random.nextInt(1, 7),
+    val value: Int = 1,
     val isSelected: Boolean = false
 )
 
@@ -11,7 +11,8 @@ data class PlayerState(
     val dice: List<Die> = List(5) { Die() },
     val currentScore: Int = 0,
     val totalScore: Int = 0,
-    val rollCount: Int = 0
+    val rollCount: Int = 0,
+    val rerollCount: Int = 0
 )
 
 data class GameState(

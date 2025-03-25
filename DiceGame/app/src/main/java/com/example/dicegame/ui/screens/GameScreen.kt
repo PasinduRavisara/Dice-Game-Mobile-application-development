@@ -16,6 +16,9 @@ import com.example.dicegame.data.PlayerState
 import com.example.dicegame.ui.components.DiceRow
 import com.example.dicegame.ui.components.ScoreBoard
 import kotlin.random.Random
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun GameScreen(
@@ -25,6 +28,10 @@ fun GameScreen(
     var showResultDialog by remember { mutableStateOf(false) }
     var targetScoreInput by remember { mutableStateOf("101") }
     var showTargetScoreDialog by remember { mutableStateOf(true) }
+    var isComputerRerolling by remember { mutableStateOf(false) }
+    var computerRerollCount by remember { mutableStateOf(0) }
+    var isShowingFinalResult by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     // Target score dialog
     if (showTargetScoreDialog) {
@@ -114,7 +121,28 @@ fun GameScreen(
                 fontSize = 18.sp
             )
 
+            if (isComputerRerolling) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Computer is rerolling... (${computerRerollCount}/2)",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            } else {
             DiceRow(dice = gameState.computerPlayer.dice)
+            }
 
             Text(
                 "Current Roll: ${calculateDiceSum(gameState.computerPlayer.dice)} points",
@@ -125,64 +153,64 @@ fun GameScreen(
         Spacer(modifier = Modifier.weight(1f))
 
         // Game controls
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
                 onClick = {
-                    if (!gameState.gameEnded && gameState.humanPlayer.rollCount < 3) {
+                    if (!gameState.gameEnded && gameState.humanPlayer.rollCount > 0 && gameState.humanPlayer.rerollCount < 2) {
                         // Roll dice for human player
                         val updatedHumanDice = rollSelectedDice(gameState.humanPlayer.dice)
 
-                        // First roll for computer or tie breaker
-                        val computerDice = if (gameState.computerPlayer.rollCount == 0 || gameState.isTieBreaker) {
-                            List(5) { Die() }  // New random dice for computer
-                        } else {
-                            gameState.computerPlayer.dice
-                        }
-
-                        // Update game state
+                        // Update game state with reroll
                         gameState = gameState.copy(
                             humanPlayer = gameState.humanPlayer.copy(
                                 dice = updatedHumanDice,
-                                rollCount = gameState.humanPlayer.rollCount + 1
-                            ),
-                            computerPlayer = gameState.computerPlayer.copy(
-                                dice = computerDice,
-                                rollCount = if (gameState.computerPlayer.rollCount == 0 || gameState.isTieBreaker)
-                                    gameState.computerPlayer.rollCount + 1
-                                else
-                                    gameState.computerPlayer.rollCount
+                                rerollCount = gameState.humanPlayer.rerollCount + 1
                             )
                         )
-
-                        // Handle auto-scoring after 3rd roll
-                        if (gameState.humanPlayer.rollCount == 3) {
-                            handleScoring(gameState) { updatedState ->
-                                gameState = updatedState
-                                checkGameEnd(updatedState, { gameState = it }, { showResultDialog = it })
-                            }
-                        }
-
-                        // Handle tie breaker
-                        if (gameState.isTieBreaker) {
-                            val humanSum = calculateDiceSum(gameState.humanPlayer.dice)
-                            val computerSum = calculateDiceSum(gameState.computerPlayer.dice)
-
-                            if (humanSum != computerSum) {
-                                gameState = gameState.copy(
-                                    gameEnded = true,
-                                    winner = if (humanSum > computerSum) "human" else "computer"
-                                )
-                                showResultDialog = true
-                            }
-                        }
                     }
                 },
-                enabled = !gameState.gameEnded && gameState.humanPlayer.rollCount < 3
+                enabled = !gameState.gameEnded && gameState.humanPlayer.rollCount == 1 && gameState.humanPlayer.rerollCount < 2,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(bottom = 8.dp)
+            ) {
+                Text("Reroll (${2 - gameState.humanPlayer.rerollCount} left)")
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = {
+                        if (!gameState.gameEnded && gameState.humanPlayer.rollCount == 0) {
+                            // Roll dice for human player
+                            val updatedHumanDice = rollSelectedDice(gameState.humanPlayer.dice)
+
+                            // First roll for computer
+                            val computerDice = List(5) { Die(value = Random.nextInt(1, 7)) }
+
+                            // Update game state
+                                gameState = gameState.copy(
+                                humanPlayer = gameState.humanPlayer.copy(
+                                    dice = updatedHumanDice,
+                                    rollCount = 1
+                                ),
+                                computerPlayer = gameState.computerPlayer.copy(
+                                    dice = computerDice,
+                                    rollCount = 1
+                                )
+                            )
+                        }
+                    },
+                    enabled = !gameState.gameEnded && gameState.humanPlayer.rollCount == 0 && !isShowingFinalResult
             ) {
                 Text("Throw")
             }
@@ -190,15 +218,82 @@ fun GameScreen(
             Button(
                 onClick = {
                     if (!gameState.gameEnded && gameState.humanPlayer.rollCount > 0) {
-                        handleScoring(gameState) { updatedState ->
-                            gameState = updatedState
+                            // Start computer's reroll process
+                            isComputerRerolling = true
+                            computerRerollCount = 0
+                            
+                            scope.launch {
+                                var currentDice = gameState.computerPlayer.dice
+                                
+                                // First reroll attempt
+                                if (Random.nextBoolean()) {
+                                    delay(1000) // 1 second delay
+                                    currentDice = computerStrategy(currentDice)
+                                    computerRerollCount = 1
+                                    gameState = gameState.copy(
+                                        computerPlayer = gameState.computerPlayer.copy(
+                                            dice = currentDice
+                                        )
+                                    )
+                                }
+                                
+                                // Second reroll attempt
+                                if (Random.nextBoolean()) {
+                                    delay(1000) // 1 second delay
+                                    currentDice = computerStrategy(currentDice)
+                                    computerRerollCount = 2
+                                    gameState = gameState.copy(
+                                        computerPlayer = gameState.computerPlayer.copy(
+                                            dice = currentDice
+                                        )
+                                    )
+                                }
+                                
+                                // End rerolling state and proceed with scoring
+                                isComputerRerolling = false
+                                isShowingFinalResult = true
+                                
+                                // Update game state with computer's final dice before scoring
+                                val stateWithComputerMoves = gameState.copy(
+                                    computerPlayer = gameState.computerPlayer.copy(
+                                        dice = currentDice
+                                    )
+                                )
+
+                                handleScoring(stateWithComputerMoves) { updatedState ->
+                                    // Update scores but keep the dice visible
+                                    gameState = updatedState.copy(
+                                        humanPlayer = updatedState.humanPlayer.copy(
+                                            rollCount = 0,
+                                            rerollCount = 0
+                                        ),
+                                        computerPlayer = updatedState.computerPlayer.copy(
+                                            rollCount = 0
+                                        )
+                                    )
                             checkGameEnd(updatedState, { gameState = it }, { showResultDialog = it })
+                                }
+
+                                // Wait 3 seconds to show the final result
+                                delay(3000)
+
+                                // After 3 seconds, reset the dice for the next attempt
+                                gameState = gameState.copy(
+                                    humanPlayer = gameState.humanPlayer.copy(
+                                        dice = List(5) { Die() }
+                                    ),
+                                    computerPlayer = gameState.computerPlayer.copy(
+                                        dice = List(5) { Die() }
+                                    )
+                                )
+                                isShowingFinalResult = false
+                            }
                         }
-                    }
-                },
-                enabled = !gameState.gameEnded && gameState.humanPlayer.rollCount > 0 && gameState.humanPlayer.rollCount < 3
+                    },
+                    enabled = !gameState.gameEnded && gameState.humanPlayer.rollCount == 1 && !isComputerRerolling
             ) {
                 Text("Score")
+                }
             }
         }
     }
@@ -249,15 +344,13 @@ private fun rollSelectedDice(dice: List<Die>): List<Die> {
 }
 
 // Implement computer's random strategy for rerolls
-private fun computerStrategy(dice: List<Die>, currentRoll: Int): List<Die> {
-    // Decide if computer wants to reroll (50% chance)
-    val wantsToReroll = Random.nextBoolean()
-
-    if (!wantsToReroll || currentRoll >= 3) {
+private fun computerStrategy(dice: List<Die>): List<Die> {
+    // Randomly decide whether to reroll at all (50% chance)
+    if (!Random.nextBoolean()) {
         return dice
     }
 
-    // Randomly select dice to reroll
+    // If rerolling, randomly select which dice to reroll
     return dice.map { die ->
         if (Random.nextBoolean()) {
             Die(value = Random.nextInt(1, 7))
