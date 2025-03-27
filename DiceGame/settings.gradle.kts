@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DiceGame"
+rootProject.name = "RollMaster"
 include(":app")
  

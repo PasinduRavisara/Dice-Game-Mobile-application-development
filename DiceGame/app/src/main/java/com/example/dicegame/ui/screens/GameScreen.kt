@@ -29,7 +29,7 @@ fun GameScreen(
     appState: AppState,
     onAppStateUpdate: (AppState) -> Unit
 ) {
-    var gameState by remember { mutableStateOf(GameState(humanWins = appState.humanWins, computerWins = appState.computerWins)) }
+    var gameState by remember { mutableStateOf(GameState(humanWins = appState.humanWins, computerWins = appState.computerWins, attemptCount = 1)) }
     var showResultDialog by remember { mutableStateOf(false) }
     var targetScoreInput by remember { mutableStateOf("101") }
     var showTargetScoreDialog by remember { mutableStateOf(true) }

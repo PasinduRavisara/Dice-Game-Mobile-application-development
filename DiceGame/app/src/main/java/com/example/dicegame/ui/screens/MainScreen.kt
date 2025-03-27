@@ -37,7 +37,7 @@ fun MainScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Dice Game",
+                text = "RollMaster",
                 fontSize = 32.sp,
                 modifier = Modifier.padding(bottom = 32.dp),
                 color = if (isDarkTheme.value) Color.White else Color.Black
@@ -104,7 +104,7 @@ fun MainScreen(
             title = { Text("How to Play", color = if (isDarkTheme.value) Color.White else Color.Black) },
             text = {
                 Text(
-                    "Welcome to Dice Game!\n\n" +
+                    "Welcome to RollMaster!\n\n" +
                     "Game Rules:\n" +
                     "1. Each player starts with 5 dice\n" +
                     "2. Players take turns rolling their dice\n" +
@@ -136,7 +136,7 @@ fun MainScreen(
             title = { Text("About", color = if (isDarkTheme.value) Color.White else Color.Black) },
             text = {
                 Text(
-                    "Student ID: 2052750\nName: Pasindu Ravisara\n\n" +
+                    "Student ID: 20527507\nName: Pasindu Ravisara\n\n" +
                             "I confirm that I understand what plagiarism is and have read and understood " +
                             "the section on assessment offenses in the Essential Information for Students. " +
                             "The work that I have submitted is entirely my own. Any work from other authors " +
