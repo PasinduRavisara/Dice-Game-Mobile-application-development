@@ -46,5 +46,15 @@ https://github.com/user-attachments/assets/b3be593a-6fc5-4548-9081-10184417d279
 
 
 ---
+## 📦 Getting Started
+
+Follow these steps to run the project locally:
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/PasinduRavisara/Roll-Master_DiceGame.git
+2. Open the project in Android Studio (Hedgehog or newer).
+
+3. Build and run on an Android device or emulator (API 24+).
 
 
