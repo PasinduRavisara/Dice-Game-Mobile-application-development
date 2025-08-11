@@ -1,10 +1,5 @@
 # 🎲 Roll Master – Dice Game
 
-![GitHub repo size](https://img.shields.io/github/repo-size/PasinduRavisara/Roll-Master_DiceGame?color=blue&style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/PasinduRavisara/Roll-Master_DiceGame?color=green&style=flat-square)
-![GitHub top language](https://img.shields.io/github/languages/top/PasinduRavisara/Roll-Master_DiceGame?logo=kotlin)
-![Android](https://img.shields.io/badge/Android-Compose-green?logo=android)
-
 > A fun and interactive Android dice game built using **Kotlin** and **Jetpack Compose**, where you challenge a computer opponent to reach the target score first. 🎯
 
 ---
